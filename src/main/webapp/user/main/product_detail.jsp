@@ -92,9 +92,21 @@
     <h1>${product.name}</h1>
 
     <div class="price-container">
-      <span class="price">
-        <fmt:formatNumber value="${product.price}" type="number"/>원
-      </span>
+      <c:choose>
+        <c:when test="${product.discountFlag eq 'Y'}">
+                <span class="price line-through">
+                    정가 : <fmt:formatNumber value="${product.price}" type="number"/>원<br>
+                </span>
+          <span class="discount-price">
+                    할인가 : <fmt:formatNumber value="${product.discountPrice}" type="number"/>원
+                </span>
+        </c:when>
+        <c:otherwise>
+                <span class="price">
+                    정가 : <fmt:formatNumber value="${product.price}" type="number"/>원
+                </span>
+        </c:otherwise>
+      </c:choose>
     </div>
 
     <div class="free-exchange">무료배송</div>
@@ -232,7 +244,14 @@
         const totalQuantity = document.getElementById("total-quantity");
 
         if (color !== "" && size !== "") {
+            <c:choose>
+            <c:when test="${product.discountFlag eq 'Y'}">
+            totalPrice.textContent = '<fmt:formatNumber value="${product.discountPrice}" type="number"/>원';
+            </c:when>
+            <c:otherwise>
             totalPrice.textContent = '<fmt:formatNumber value="${product.price}" type="number"/>원';
+            </c:otherwise>
+            </c:choose>
             totalQuantity.textContent = "총 수량 1개";
         } else {
             totalPrice.textContent = "0원";
@@ -250,7 +269,14 @@
             return;
         }
 
-        location.href = '../payment/payment.jsp?productId=${product.productId}&color=' + color + '&size=' + size;
+        <c:choose>
+        <c:when test="${product.discountFlag eq 'Y'}">
+        location.href = '../payment/payment.jsp?productId=${product.productId}&color=' + color + '&size=' + size + '&price=${product.discountPrice}';
+        </c:when>
+        <c:otherwise>
+        location.href = '../payment/payment.jsp?productId=${product.productId}&color=' + color + '&size=' + size + '&price=${product.price}';
+        </c:otherwise>
+        </c:choose>
     }
 
     // 탭 전환

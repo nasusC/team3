@@ -3,12 +3,18 @@
 <%@ page import="org.json.simple.JSONObject" %>
 <%@ page import="org.json.simple.JSONArray" %>
 <%@ page import="java.util.List" %>
+<%@ include file="/common/session_chk.jsp" %>
 
 <%
     JSONObject jsonResponse = new JSONObject();
 
     try {
-        String userId = request.getParameter("userId");
+        // 임시 userId (실제로는 세션에서 가져와야 함)
+        String userId = sessionId;
+
+        if(userId == null || userId.trim().isEmpty()) {
+            throw new Exception("사용자 ID가 없습니다.");
+        }
 
         ShippingDAO dao = new ShippingDAO();
         List<ShippingVO> shippingList = dao.selectAllShipping(userId);
@@ -21,6 +27,7 @@
             shipping.put("phone", sVO.getPhone());
             shipping.put("address", sVO.getAddress());
             shipping.put("address2", sVO.getAddress2());
+            shipping.put("memo", sVO.getMemo());
             jsonArray.add(shipping);
         }
 
@@ -28,10 +35,13 @@
         jsonResponse.put("shippingList", jsonArray);
 
     } catch(Exception e) {
+        e.printStackTrace();
         jsonResponse.put("success", false);
         jsonResponse.put("message", "배송지 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
     }
 
     response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
     out.print(jsonResponse.toJSONString());
+    out.flush();
 %>

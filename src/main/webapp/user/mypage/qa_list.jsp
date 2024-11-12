@@ -1,12 +1,44 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" info="" %>
-<%--로그인세션필요--%>
+
+<%@page import="java.util.List"%>
+<%@ page import="kr.co.sist.user.temp.InquirySearchVO" %>
+<%@ page import="kr.co.sist.user.temp.UserInquiryDAO" %>
+<%@ page import="kr.co.sist.user.temp.InquiryVO" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"
+    info=""
+    %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ include file="/common/session_chk.jsp" %>
+<%
+// 검색 키워드 받기
+String keyword = request.getParameter("keyword");
+
+// InquirySearchVO 설정
+InquirySearchVO isVO = new InquirySearchVO();
+isVO.setUserId(sessionId);
+isVO.setKeyword(keyword);
+
+// 문의사항 목록 조회
+UserInquiryDAO uiDAO = UserInquiryDAO.getInstance();
+List<InquiryVO> inquiryList = uiDAO.selectUserAllInquiry(isVO);
+
+// pageContext에 저장
+pageContext.setAttribute("inquiryList", inquiryList);
+%>
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Q&A 목록 및 문의하기</title>
-    
-    <style>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="shotcut icon" href="http://192.168.10.218/jsp_prj/common/images/favicon.ico"/>
+<!-- bootstrap CDN 시작 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- jQuery CDN 시작 -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<style type="text/css">
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -159,12 +191,16 @@
             height: 150px; /* 텍스트 에리어 크기 고정 */
             resize: none; /* 크기 조절 비활성화 */
         }
-    </style>
+</style>
+<script type="text/javascript">
+$(function(){
+
+});//ready
+</script>
 </head>
 <body>
-
-    <div class="logo">
-        <img src="http://localhost:8080/test/dg/%EC%83%81%ED%91%9C.png" alt="Ego Emporium">
+<div class="logo">
+        <img src="images/상표.png" alt="Ego Emporium">
     </div>
 
     <h2>Q&A 목록</h2>
@@ -188,8 +224,29 @@
             </tr>
         </thead>
         <tbody id="qaList">
-            <!-- 등록된 문의 목록은 여기에 추가할 수 있습니다. -->
-        </tbody>
+		    <c:choose>
+		        <c:when test="${empty inquiryList}">
+		            <tr>
+		                <td colspan="5">등록된 문의사항이 없습니다.</td>
+		            </tr>
+		        </c:when>
+		        <c:otherwise>
+		            <c:forEach var="inquiry" items="${inquiryList}">
+		                <tr class="qa-item">
+		                    <td>${inquiry.inquiry_id}</td>
+		                    <td>${inquiry.category}</td>
+		                    <td style="text-align: left;" onclick="toggleDetails(this)">${inquiry.title}</td>
+		                    <td>${inquiry.userId}</td>
+		                    <td>${inquiry.create_at}</td>
+		                </tr>
+		                <tr class="qa-content" style="display: none;">
+		                    <td colspan="5" style="text-align: left;">
+		                    </td>
+		                </tr>
+		            </c:forEach>
+		        </c:otherwise>
+		    </c:choose>
+		</tbody>
     </table>
 
     <!-- 문의하기 모달 -->
@@ -199,136 +256,162 @@
             <h2>문의하기</h2>
 
             <!-- 문의 폼 테이블 형식 -->
-            <table>
-                <tr>
-                    <td style="background-color: #f0f0f0;"><strong>문의 종류</strong></td>
-                    <td colspan="4">
-                        <label><input type="checkbox" name="inquiryType" value="상품" onclick="checkOnlyOne(this)"> 상품</label>
-                        <label><input type="checkbox" name="inquiryType" value="배송" onclick="checkOnlyOne(this)"> 배송</label>
-                        <label><input type="checkbox" name="inquiryType" value="취소" onclick="checkOnlyOne(this)"> 취소</label>
-                        <label><input type="checkbox" name="inquiryType" value="반품/교환" onclick="checkOnlyOne(this)"> 반품/교환</label>
-                        <label><input type="checkbox" name="inquiryType" value="기타" onclick="checkOnlyOne(this)"> 기타</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="background-color: #f0f0f0;"><strong>아이디</strong></td>
-                    <td colspan="4">
-                        <input type="text" id="writerName" placeholder="아이디" rows="4" style="width: 80%; resize: none;">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="background-color: #f0f0f0;"><strong>제목</strong></td>
-                    <td colspan="4">
-                        <input type="text" id="inquiryTitle" placeholder="문의 제목" rows="4" style="width: 80%; resize: none;">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="background-color: #f0f0f0;"><strong>내용</strong></td>
-                    <td colspan="4">
-                        <textarea id="inquiryText" placeholder="문의 내용을 작성하세요..." rows="4" style="width: 80%; height: 150px; resize: none;"></textarea>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" class="warning-text">
-                        <strong>문의 시 유의해주세요!</strong><br>
-                        회원간 직거래로 발생하는 피해에 대해 책임지지 않습니다.<br>
-                        주민등록번호, 연락처 등의 정보는 타인에게 노출될 경우 개인정보 도용의 위험이 있으니 주의해 주시기 바랍니다.<br>
-                        비방, 광고, 불건전한 내용의 글은 관리자에 의해 삭제될 수 있습니다.
-                    </td>
-                </tr>
-            </table>
-
-            <div class="button-group">
-                <button onclick="submitInquiry()">확인</button>
-                <button class="cancel" onclick="closeModal()">취소</button>
-            </div>
-        </div>
-    </div>
+            <form id="qaForm" action="qa_process.jsp" method="post">
+	           <table>
+	               <tr>
+	                   <td style="background-color: #f0f0f0;"><strong>문의 종류</strong></td>
+	                   <td colspan="4">
+	                       <label><input type="radio" name="inquiryType" value="상품" required> 상품</label>
+	                       <label><input type="radio" name="inquiryType" value="배송"> 배송</label>
+	                       <label><input type="radio" name="inquiryType" value="취소"> 취소</label>
+	                       <label><input type="radio" name="inquiryType" value="반품/교환"> 반품/교환</label>
+	                       <label><input type="radio" name="inquiryType" value="기타"> 기타</label>
+	                   </td>
+	               </tr>
+	               <tr>
+	                   <td style="background-color: #f0f0f0;"><strong>아이디</strong></td>
+	                   <td colspan="4">
+	                       <input type="text" name="userId" value="<%= sessionId %>" readonly style="background-color: #f0f0f0; width: 80%;">
+	                   </td>
+	               </tr>
+	               <tr>
+	                   <td style="background-color: #f0f0f0;"><strong>제목</strong></td>
+	                   <td colspan="4">
+	                       <input type="text" name="title" placeholder="문의 제목" style="width: 80%;" required>
+	                   </td>
+	               </tr>
+	               <tr>
+	                   <td style="background-color: #f0f0f0;"><strong>내용</strong></td>
+	                   <td colspan="4">
+	                       <textarea name="content" placeholder="문의 내용을 작성하세요..." style="width: 80%; height: 150px; resize: none;" required></textarea>
+	                   </td>
+	               </tr>
+	               <tr>
+	                   <td colspan="5" class="warning-text">
+	                       <strong>문의 시 유의해주세요!</strong><br>
+	                       회원간 직거래로 발생하는 피해에 대해 책임지지 않습니다.<br>
+	                       주민등록번호, 연락처 등의 정보는 타인에게 노출될 경우 개인정보 도용의 위험이 있으니 주의해 주시기 바랍니다.<br>
+	                       비방, 광고, 불건전한 내용의 글은 관리자에 의해 삭제될 수 있습니다.
+	                   </td>
+	               </tr>
+	           </table>
+	
+	           <div class="button-group">
+	               <button type="button" onclick="submitQA()">확인</button>
+	               <button type="button" class="cancel" onclick="closeModal()">취소</button>
+	           </div>
+	       </form>
+	   </div>
+	</div>
 
     <script>
-        let inquiryCount = 0; // 문의 번호 카운터
-        const inquiries = []; // 문의 내용을 저장할 배열
+    	function searchQuestions() {
+    	   const keyword = document.getElementById("searchInput").value;
+    	   location.href = "qa_list.jsp?keyword=" + encodeURIComponent(keyword);
+    	}
+    	
+    	document.getElementById("searchInput").addEventListener("keypress", function(event) {
+   		   if (event.key === "Enter") {
+   		       searchQuestions();
+   		   }
+   		});
+    	
+    	window.onload = function() {
+   		   const urlParams = new URLSearchParams(window.location.search);
+   		   const keyword = urlParams.get('keyword');
+   		   if(keyword) {
+   		       document.getElementById("searchInput").value = decodeURIComponent(keyword);
+   		   }
+   		}
+   
+	    function submitQA() {
+	        // 필수 입력값 확인
+	        const type = document.querySelector('input[name="inquiryType"]:checked');
+	        const title = document.querySelector('input[name="title"]').value.trim();
+	        const content = document.querySelector('textarea[name="content"]').value.trim();
+	
+	        if(!type) {
+	            alert('문의 종류를 선택해주세요.');
+	            return;
+	        }
+	        if(!title) {
+	            alert('제목을 입력해주세요.');
+	            return;
+	        }
+	        if(!content) {
+	            alert('내용을 입력해주세요.');
+	            return;
+	        }
+	        if(content.length < 10) {
+	            alert('내용은 최소 10자 이상 입력해주세요.');
+	            return;
+	        }
+	
+	        // 폼 제출
+	        document.getElementById('qaForm').submit();
+	    }
+	
+	    function closeModal() {
+	        document.getElementById("myModal").style.display = "none";
+	        document.getElementById("qaForm").reset(); // 폼 초기화
+	    }
+	
+	    function openModal() {
+	        document.getElementById("myModal").style.display = "block";
+	    }
+	    
+	    function toggleDetails(cell) {
+	    	   const row = cell.parentElement;
+	    	   const contentRow = row.nextElementSibling;
+	    	   const inquiryId = row.querySelector('td:first-child').textContent;
 
-        function openModal() {
-            document.getElementById("myModal").style.display = "block";
-        }
-
-        function closeModal() {
-            document.getElementById("myModal").style.display = "none";
-            document.getElementById("writerName").value = '';
-            document.getElementById("inquiryTitle").value = '';
-            document.getElementById("inquiryText").value = '';
-            const checkboxes = document.getElementsByName('inquiryType');
-            checkboxes.forEach(checkbox => checkbox.checked = false);
-        }
-
-        function searchQuestions() {
-            const input = document.getElementById("searchInput").value.toLowerCase();
-            const rows = document.querySelectorAll("#qaList tr:not(.qa-content)"); // 내용 행을 제외하고 검색
-            rows.forEach(row => {
-                const title = row.cells[2].textContent.toLowerCase();
-                row.style.display = title.includes(input) ? "" : "none";
-                const contentRow = row.nextElementSibling; // 해당 행의 다음 요소(내용 행)
-                if (contentRow) {
-                    contentRow.style.display = title.includes(input) ? "none" : "none"; // 내용도 숨김
-                }
-            });
-        }
-
-        function submitInquiry() {
-            const writerName = document.getElementById("writerName").value;
-            const inquiryTitle = document.getElementById("inquiryTitle").value;
-            const inquiryText = document.getElementById("inquiryText").value;
-            const inquiryType = Array.from(document.getElementsByName('inquiryType'))
-                .find(checkbox => checkbox.checked)?.value || '미지정';
-
-            inquiryCount++; // 문의 번호 증가
-
-            // 문의자의 이름을 첫 세 글자만 보여주고 나머지는 *로 마스킹
-            let maskedName = writerName.length > 3 ? writerName.slice(0, 3) + '*'.repeat(writerName.length - 3) : writerName;
-
-            // Q&A 목록에 새로운 문의 추가
-            const newRow = document.createElement('tr');
-            newRow.className = 'qa-item';
-            newRow.innerHTML = 
-                `<td>${inquiryCount}</td>
-                <td>${inquiryType}</td>
-                <td style="text-align: left;" onclick="toggleDetails(this)">${inquiryTitle}</td>
-                <td>${maskedName}</td>
-                <td>${new Date().toLocaleDateString()}</td>`;
-            
-            const contentRow = document.createElement('tr');
-            contentRow.className = 'qa-content'; // 클래스 추가
-            contentRow.innerHTML = 
-                `<td colspan="5" style="text-align: left;">
-                    <div><strong>내용:</strong> ${inquiryText}</div>
-                    <div><strong>답변:</strong> <span class="admin-reply">답변이 없습니다.</span></div>
-                </td>`;
-            contentRow.style.display = 'none'; // 초기 상태는 숨김
-            document.getElementById("qaList").appendChild(newRow);
-            document.getElementById("qaList").appendChild(contentRow); // 내용 행 추가
-
-            // 문의 내용을 비워줌
-            closeModal();
-        }
-
-
-        function toggleDetails(titleCell) {
-            const contentRow = titleCell.parentElement.nextElementSibling; // 다음 요소(내용 행)
-            if (contentRow.style.display === 'none' || contentRow.style.display === '') {
-                contentRow.style.display = 'table-row'; // 테이블 행으로 표시
-            } else {
-                contentRow.style.display = 'none';
-            }
-        }
-
-        function checkOnlyOne(checkbox) {
-            const checkboxes = document.getElementsByName(checkbox.name);
-            checkboxes.forEach((item) => {
-                if (item !== checkbox) item.checked = false;
-            });
-        }
+	    	   if (contentRow.style.display === 'none' || contentRow.style.display === '') {
+	    	       $.ajax({
+	    	           type: "POST",
+	    	           url: "get_inquiry_content.jsp",
+	    	           dataType: "json",
+	    	           data: { 
+	    	               inquiryId: inquiryId 
+	    	           },
+	    	           success: function(response) {
+	    	               console.log("Response received:", response);
+	    	               
+	    	               const content = response.content || '내용이 없습니다.';
+	    	               const answer = response.answer || '답변이 없습니다.';
+	    	               
+	    	               const td = contentRow.querySelector('td');
+	    	               
+	    	               // 내용 div
+	    	               const contentDiv = document.createElement('div');
+	    	               contentDiv.style.padding = '10px';
+	    	               contentDiv.style.backgroundColor = '#f8f9fa';
+	    	               contentDiv.style.borderRadius = '5px';
+	    	               contentDiv.innerHTML = '<strong style="display: block; margin-bottom: 10px;">내용:</strong>' + 
+	    	                                    '<div style="padding: 10px; background-color: white; border-radius: 5px;">' + content + '</div>';
+	    	               
+	    	               // 답변 div
+	    	               const answerDiv = document.createElement('div');
+	    	               answerDiv.style.padding = '10px';
+	    	               answerDiv.style.backgroundColor = '#f8f9fa';
+	    	               answerDiv.style.borderRadius = '5px';
+	    	               answerDiv.innerHTML = '<strong style="display: block; margin-bottom: 10px;">답변:</strong>' + 
+	    	                                   '<div style="padding: 10px; background-color: white; border-radius: 5px;">' + answer + '</div>';
+	    	               
+	    	               td.innerHTML = '';
+	    	               td.appendChild(contentDiv);
+	    	               td.appendChild(answerDiv);
+	    	               
+	    	               contentRow.style.display = 'table-row';
+	    	           },
+	    	           error: function(xhr) {
+	    	               console.error("Error:", xhr);
+	    	               alert("내용을 가져오는데 실패했습니다.");
+	    	           }
+	    	       });
+	    	   } else {
+	    	       contentRow.style.display = 'none';
+	    	   }
+	    	}
     </script>
-
 </body>
 </html>

@@ -6,7 +6,17 @@ package kr.co.sist.user.payment;
 public class ShippingVO {
 
     private int shippingId, orderId;
-    private String recipient, phone, address,address2, memo, shippingStatus;
+    private String recipient, phone, address,address2, memo, status;
+
+    private String isDefault;
+
+    public String getIsDefault() {
+        return isDefault;
+    }
+
+    public void setIsDefault(String isDefault) {
+        this.isDefault = isDefault;
+    }
 
     public int getShippingId() {
         return shippingId;
@@ -56,12 +66,12 @@ public class ShippingVO {
         this.memo = memo;
     }
 
-    public String getShippingStatus() {
-        return shippingStatus;
+    public String getStatus() {
+        return status;
     }
 
-    public void setShippingStatus(String shippingStatus) {
-        this.shippingStatus = shippingStatus;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getAddress2() {

@@ -1,6 +1,7 @@
 <%@ page contentType="application/json;charset=UTF-8" language="java" %>
 <%@ page import="kr.co.sist.user.payment.*" %>
 <%@ page import="org.json.simple.JSONObject" %>
+<%@ include file="/common/session_chk.jsp" %>
 
 <%
     JSONObject jsonResponse = new JSONObject();

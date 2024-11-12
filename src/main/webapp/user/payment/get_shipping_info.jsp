@@ -1,13 +1,20 @@
 <%@ page contentType="application/json;charset=UTF-8" language="java" %>
 <%@ page import="kr.co.sist.user.payment.*" %>
 <%@ page import="org.json.simple.JSONObject" %>
+<%@ include file="/common/session_chk.jsp" %>
 
 <%
     JSONObject jsonResponse = new JSONObject();
 
     try {
         // 파라미터 받기
-        int shippingId = Integer.parseInt(request.getParameter("shippingId"));
+        String shippingIdStr = request.getParameter("shippingId");
+
+        if(shippingIdStr == null || shippingIdStr.trim().isEmpty()) {
+            throw new Exception("배송지 ID가 없습니다.");
+        }
+
+        int shippingId = Integer.parseInt(shippingIdStr);
 
         // 배송지 정보 조회
         ShippingDAO dao = new ShippingDAO();
@@ -27,10 +34,13 @@
         }
 
     } catch(Exception e) {
+        e.printStackTrace();
         jsonResponse.put("success", false);
         jsonResponse.put("message", "배송지 정보 조회 중 오류가 발생했습니다: " + e.getMessage());
     }
 
     response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
     out.print(jsonResponse.toJSONString());
+    out.flush();
 %>

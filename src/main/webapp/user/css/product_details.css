@@ -198,3 +198,16 @@ td:first-child {
 .total-price {
 	text-align: right;
 }
+
+/* 기존 price 클래스 유지하면서 line-through 클래스 추가 */
+.price.line-through {
+	text-decoration: line-through;
+	color: #999;
+}
+
+/* 기존 discount-price 클래스는 그대로 유지 */
+.discount-price {
+	color: #BA0A23;
+	font-weight: bold;
+	font-size: 1.5em;
+}

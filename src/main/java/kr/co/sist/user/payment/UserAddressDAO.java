@@ -94,7 +94,7 @@ public class UserAddressDAO {
                 sVO.setPhone(rs.getString("PHONE"));
                 sVO.setAddress(rs.getString("ADDRESS"));
                 sVO.setMemo(rs.getString("MEMO"));
-                sVO.setShippingStatus(rs.getString("STATUS_NAME"));
+                sVO.setStatus(rs.getString("STATUS"));
             }
 
         } finally {

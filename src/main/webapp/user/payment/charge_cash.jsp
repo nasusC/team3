@@ -2,10 +2,11 @@
 <%@ page import="kr.co.sist.user.payment.*" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ include file="/common/session_chk.jsp" %>
 
 <%
   // 임시 userId 설정 (실제로는 로그인 세션에서 가져와야 함)
-  String userId = "user1";
+  String userId = sessionId;
 
   // 현재 보유 캐시 조회
   UserCashDAO cashDAO = new UserCashDAO();

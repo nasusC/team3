@@ -3,6 +3,7 @@
 <%@ page import="kr.co.sist.user.order.*" %>
 <%@ page import="org.json.simple.JSONObject" %>
 <%@ page import="java.sql.Date" %>
+<%@ include file="/common/session_chk.jsp" %>
 
 <%
    JSONObject jsonResponse = new JSONObject();
@@ -38,39 +39,42 @@
            throw new Exception("잘못된 파라미터 형식입니다: " + e.getMessage());
        }
 
-       // 세션에서 사용자 ID 가져오기 (로그인 구현 후 수정)
-       String userId = "user1"; // 테스트용 임시 값
+       String userId = sessionId;
 
-       // 4. 주문 정보 생성
+       // 4. 배송지 정보 조회
+       ShippingDAO shippingDAO = new ShippingDAO();
+       ShippingVO shippingVO = shippingDAO.selectOneShipping(shippingId);
+
+       // 5. 주문 정보 생성
        OrderVO orderVO = new OrderVO();
        orderVO.setUserId(userId);
        orderVO.setOrderName("상품 주문");
        orderVO.setOrderDate(new Date(System.currentTimeMillis()));
        orderVO.setOrderStatus("결제완료");
        orderVO.setTotalAmount(amount);
-       orderVO.setOrderFlag("일반주문");
+       orderVO.setOrderFlag("배송준비");
 
-       // 5. 주문 상품 정보 생성
+       // 6. 주문 상품 정보 생성
        OrderProductVO orderProductVO = new OrderProductVO();
        orderProductVO.setProductId(productId);
        orderProductVO.setQuantity(1);
        orderProductVO.setPrice(amount);
 
-       // 6. DB 처리
+       // 7. 주문 정보 DB 처리 (배송지 정보도 함께 처리)
        OrderDAO orderDAO = new OrderDAO();
        System.out.println("Attempting to insert order...");
 
-       int orderResult = orderDAO.insertOrder(orderVO, orderProductVO);
+       int orderResult = orderDAO.insertOrder(orderVO, orderProductVO, shippingId);
        System.out.println("Order insert result: " + orderResult);
 
        if(orderResult > 0) {
-           // 7. 결제 정보 저장
+           // 8. 결제 정보 저장
            PaymentVO paymentVO = new PaymentVO();
-           paymentVO.setOrderId(orderResult);  // OrderDAO에서 반환된 order_id 사용
+           paymentVO.setOrderId(orderResult);
            paymentVO.setAmount(amount);
            paymentVO.setMethod(paymentMethod);
            paymentVO.setPaymentDate(new Date(System.currentTimeMillis()));
-           paymentVO.setUserCash(0);  // 기본값 설정
+           paymentVO.setUserCash(0);
 
            PaymentDAO paymentDAO = new PaymentDAO();
            System.out.println("Attempting to insert payment...");

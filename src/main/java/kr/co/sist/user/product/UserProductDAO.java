@@ -249,7 +249,7 @@ public class UserProductDAO {
             selectQuery
                     .append(" SELECT PRODUCT_ID, NAME, PRICE, BRAND, ")
                     .append(" DESCRIPTION, STOCK_QUANTITY, MAIN_IMG, ")
-                    .append(" CREATED_AT, MODEL_NAME ")
+                    .append(" CREATED_AT, MODEL_NAME, DISCOUNT_PRICE, DISCOUNT_FLAG")
                     .append(" FROM PRODUCTS ")
                     .append(" WHERE PRODUCT_ID = ? ");
 
@@ -268,6 +268,8 @@ public class UserProductDAO {
                 pVO.setStockQuantity(rs.getInt("STOCK_QUANTITY"));
                 pVO.setCreatedAt(rs.getDate("CREATED_AT"));
                 pVO.setModelName(rs.getString("MODEL_NAME"));
+                pVO.setDiscountPrice(rs.getInt("DISCOUNT_PRICE"));
+                pVO.setDiscountFlag(rs.getString("DISCOUNT_FLAG"));
             }
 
         } finally {

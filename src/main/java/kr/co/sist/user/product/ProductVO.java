@@ -18,7 +18,24 @@ public class ProductVO {
     private String modelName;
     private String salesStatus;
 
+    private int discountPrice;
+    private String discountFlag;
 
+    public int getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(int discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public String getDiscountFlag() {
+        return discountFlag;
+    }
+
+    public void setDiscountFlag(String discountFlag) {
+        this.discountFlag = discountFlag;
+    }
 
     public int getProductId() {
         return productId;

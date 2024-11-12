@@ -1,11 +1,41 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" info="" %>
-<%--로그인세션필요--%>
+<%@page import="java.io.File"%>
+<%@ page import="kr.co.sist.user.temp.OrderDAO" %>
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"
+    info=""
+    %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ include file="/common/session_chk.jsp" %>
+<%
+// 세션에서 데이터 받아오기
+String productName = (String)session.getAttribute("reviewProductName");
+String imgName = (String)session.getAttribute("reviewImgName");
+String orderId = (String)session.getAttribute("reviewOrderId");
+
+// product_id 조회
+OrderDAO oDAO = OrderDAO.getInstance();
+int productId = oDAO.selectProductId(orderId);
+
+// 세션 데이터 사용 후 삭제
+session.removeAttribute("reviewProductName");
+session.removeAttribute("reviewImgName");
+session.removeAttribute("reviewOrderId");
+%>
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>리뷰 작성</title>
-    
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="shotcut icon" href="http://192.168.10.218/jsp_prj/common/images/favicon.ico"/>
+<link rel="stylesheet" type="text/css" href="http://192.168.10.218/jsp_prj/common/css/main_20240911.css">
+<!-- bootstrap CDN 시작 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- jQuery CDN 시작 -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -62,6 +92,10 @@
             background-color: white; /* 흰색 배경 */
             box-sizing: border-box; /* 패딩 및 테두리 포함 */
         }
+        .proName{
+        	font-weight: bold;
+        	font-size: 15px;
+        }
         .upload-btn {
             margin-top: 10px;
             width: 95%; /* 전체 너비 사용 */
@@ -110,33 +144,64 @@
             margin-top: -5px; /* 약간 위로 위치 조정 */
         }
     </style>
+<script type="text/javascript">
+$(function(){
+
+});//ready
+</script>
 </head>
 <body>
     <div class="review-container">
-        <h2>리뷰 작성</h2>
-        <div class="product-info">
-            <img src="http://localhost:8080/test/dg/20241010_235120.png" alt="상품 이미지" /> <!-- 상품 이미지 -->
-            <div>나이키 V2K 런 블랙 앤트러사이트 FD0736-001</div> <!-- 상품 이름 -->
-        </div>
-        <div class="prompt">상품은 만족하셨나요?</div>
-        <div class="star-rating">
-            <span class="star" data-value="1">★</span>
-            <span class="star" data-value="2">★</span>
-            <span class="star" data-value="3">★</span>
-            <span class="star" data-value="4">★</span>
-            <span class="star" data-value="5">★</span>
-        </div>
-        <div class="small-text">선택하세요</div> <!-- 작은 글씨 추가 -->
-        <div class="prompt">어떤 점이 좋았나요?</div>
-        <textarea class="review-textarea" id="reviewText" placeholder="리뷰 내용을 10자 이상 입력하세요..."></textarea>
-        <div class="upload-btn">
-            <label for="imageUpload">사진 첨부하기</label>
-            <input type="file" id="imageUpload" accept="image/*" style="display:none;"> <!-- 숨김 -->
-        </div>
-        <div class="button-container">
-            <button class="cancel" onclick="window.close()">취소</button>
-            <button class="submit" onclick="submitReview()">확인</button>
-        </div>
+        <form id="reviewForm" action="review_process.jsp" method="post" enctype="multipart/form-data">
+			        <div class="product-info">
+		    <%
+		        String contextPath = request.getContextPath();
+		        String imagePath = contextPath + "/project/mypage/images/" + imgName;
+		        
+		        // 디버깅: 실제 파일 존재 여부 확인
+		        String realPath = application.getRealPath("/project/mypage/images");
+		        File imageFile = new File(realPath, imgName);
+		        
+		        System.out.println("Context Path: " + contextPath);
+		        System.out.println("Image Path: " + imagePath);
+		        System.out.println("Real Path: " + realPath);
+		        System.out.println("File exists: " + imageFile.exists());
+		    %>
+		    <img src="<%= imagePath %>"
+		         alt="상품 이미지"
+		         onerror="this.onerror=null; this.src='<%= contextPath %>/project/mypage/images/no-image.png';" />
+		    <div><span class="proName"><%= productName %></span></div>
+		</div>
+	        <div class="prompt">상품은 만족하셨나요?</div>
+	        <div class="star-rating">
+	            <span class="star" data-value="1">★</span>
+	            <span class="star" data-value="2">★</span>
+	            <span class="star" data-value="3">★</span>
+	            <span class="star" data-value="4">★</span>
+	            <span class="star" data-value="5">★</span>
+	        </div>
+	        <div class="small-text">선택하세요</div>
+	        <div class="prompt">어떤 점이 좋았나요?</div>
+	        <textarea class="review-textarea" id="reviewText" name="reviewContent" placeholder="리뷰 내용을 10자 이상 입력하세요..."></textarea>
+	        <div class="image-upload">
+		       <div class="preview-container" style="display: none; margin: 10px 0;">
+		           <img id="preview" style="max-width: 200px; max-height: 200px;">
+		       </div>
+		       <div class="upload-btn" style="margin: 10px 0;">
+		           <input type="file" id="reviewImage" name="reviewImage" accept="image/*" style="display: none;" onchange="previewImage(this)">
+		           <button type="button" onclick="document.getElementById('reviewImage').click()" style="padding: 8px 15px;">
+		               사진 첨부하기
+		           </button>
+		           <span id="fileName" style="margin-left: 10px; color: #666;"></span>
+		       </div>
+		   </div>
+	        <input type="hidden" name="rating" id="ratingInput" value="0">
+	        <input type="hidden" name="orderId" value="<%= orderId %>">
+	        <div class="button-container">
+	            <button type="button" class="cancel" onclick="location.href='../login/notice.jsp'">취소</button>
+	            <button type="button" class="submit" onclick="submitReview()">확인</button>
+	        </div>
+	    </form>
     </div>
 
     <script>
@@ -147,7 +212,9 @@
         stars.forEach(star => {
             star.addEventListener('click', () => {
                 selectedRating = star.getAttribute('data-value');
+                document.getElementById('ratingInput').value = selectedRating;
                 updateStarRating();
+                updateRatingText(selectedRating);
             });
         });
 
@@ -159,19 +226,94 @@
                 }
             });
         }
+        
+        function updateRatingText(rating) {
+            const smallText = document.querySelector('.small-text');
+            smallText.textContent = rating + "점";
+        }
+        
+        function previewImage(input) {
+            const preview = document.getElementById('preview');
+            const previewContainer = document.querySelector('.preview-container');
+            const fileNameSpan = document.getElementById('fileName');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    // 미리보기 이미지에 Data URL 설정
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                    fileNameSpan.textContent = input.files[0].name;
+                };
+                
+                // 이미지를 Data URL로 읽기
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = '';
+                previewContainer.style.display = 'none';
+                fileNameSpan.textContent = '';
+            }
+        }
 
         function submitReview() {
-            const reviewText = document.getElementById('reviewText').value;
-            if (reviewText.length < 10) {
-                alert('리뷰는 최소 10자 이상 입력해야 합니다.');
-                return;
-            }
+        	  const reviewText = document.getElementById('reviewText').value;
+        	  const rating = document.getElementById('ratingInput').value;
+        	  const fileInput = document.getElementById('reviewImage');
+        	  
+        	  const orderId = '<%= orderId %>';
+        	  // 디버깅 코드 추가
+        	  
+        	  if (reviewText.length < 10) {
+        	    alert('리뷰는 최소 10자 이상 입력해야 합니다.');
+        	    return;
+        	  }
 
-            const rating = selectedRating ? selectedRating : 0;
-            alert(`리뷰 제출 완료!\n별점: ${rating}\n리뷰: ${reviewText}`);
-            // 여기에 리뷰를 서버로 전송하는 코드 추가
-            window.close(); // 창 닫기
-        }
+        	  if (rating === '0') {
+        	    alert('별점을 선택해주세요.');
+        	    return;
+        	  }
+
+        	  const formData = new FormData();
+        	  formData.append('reviewContent', reviewText);
+        	  formData.append('rating', rating);
+        	  formData.append('orderId', orderId);
+
+        	  if (fileInput.files.length > 0) {
+        	    const file = fileInput.files[0];
+
+        	    // 파일 크기 체크 (5MB 제한)
+        	    if (file.size > 5 * 1024 * 1024) {
+        	      alert('파일 크기는 5MB를 초과할 수 없습니다.');
+        	      return;
+        	    }
+
+        	    // 파일 형식 체크
+        	    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        	    if (!validTypes.includes(file.type)) {
+        	      alert('JPG, PNG, GIF 형식의 이미지만 업로드 가능합니다.');
+        	      return;
+        	    }
+
+        	    formData.append('reviewImage', file);
+        	  }
+
+        	  $.ajax({
+        	    type: 'POST',
+        	    url: 'review_process.jsp',
+        	    data: formData,
+        	    processData: false,
+        	    contentType: false,
+        	    success: function(response) {
+        	        alert('리뷰가 등록되었습니다.');
+        	        window.location.href = '../login/notice.jsp';
+        	    },
+        	    error: function(xhr, status, error) {
+        	      console.error('Error:', error);
+        	      alert('리뷰 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+        	    }
+        	  });
+        	}
     </script>
 </body>
 </html>

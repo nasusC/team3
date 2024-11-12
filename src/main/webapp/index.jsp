@@ -5,6 +5,7 @@
 <%@ page import="java.sql.SQLException" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <%
   // DAO 인스턴스 생성
@@ -89,16 +90,16 @@
 
 <!-- 정렬 옵션 -->
 <div class="sort-options">
-  <a href="index.jsp?sort=popular${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
+  <a href="index.jsp?sort=popular${not empty param.name ? '&name='.concat(param.name) : ''}${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
      class="sort-link ${sortMethod eq 'popular' ? 'active' : ''}">인기도순</a> |
 
-  <a href="index.jsp?sort=latest${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
+  <a href="index.jsp?sort=latest${not empty param.name ? '&name='.concat(param.name) : ''}${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
      class="sort-link ${sortMethod eq 'latest' ? 'active' : ''}">최신등록순</a> |
 
-  <a href="index.jsp?sort=lowPrice${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
+  <a href="index.jsp?sort=lowPrice${not empty param.name ? '&name='.concat(param.name) : ''}${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
      class="sort-link ${sortMethod eq 'lowPrice' ? 'active' : ''}">낮은가격순</a> |
 
-  <a href="index.jsp?sort=highPrice${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
+  <a href="index.jsp?sort=highPrice${not empty param.name ? '&name='.concat(param.name) : ''}${not empty param.brand ? '&brand='.concat(param.brand) : ''}${not empty param.category ? '&category='.concat(param.category) : ''}"
      class="sort-link ${sortMethod eq 'highPrice' ? 'active' : ''}">높은가격순</a>
 </div>
 
@@ -111,7 +112,7 @@
           <a href="user/main/product_detail.jsp?id=${product.productId}">
             <img src="${product.mainImg}" alt="${product.name}">
           </a>
-          <div class="product-info">
+          <div class="product-info ">
             <h3>${product.name}</h3>
             <p class="brand">${product.brand}</p>
             <p class="price">

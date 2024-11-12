@@ -1,6 +1,7 @@
 <%@ page contentType="application/json;charset=UTF-8" language="java" %>
 <%@ page import="kr.co.sist.user.payment.*" %>
 <%@ page import="org.json.simple.JSONObject" %>
+<%@ include file="/common/session_chk.jsp" %>
 
 <%
     JSONObject jsonResponse = new JSONObject();
@@ -14,6 +15,7 @@
         int result = dao.deleteShipping(shippingId);
 
         if(result > 0) {
+
             jsonResponse.put("success", true);
             jsonResponse.put("message", "배송지가 삭제되었습니다.");
         } else {

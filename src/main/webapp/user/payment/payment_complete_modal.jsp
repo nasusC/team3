@@ -1,10 +1,11 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" info="" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ include file="/common/session_chk.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>주문 처리 모달</title>
+    <title>결제 완료</title>
     <style>
         .modal-overlay {
             position: fixed;
@@ -13,7 +14,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            display: none;
+            display: flex;
             justify-content: center;
             align-items: center;
         }
@@ -31,12 +32,7 @@
             font-weight: bold;
             text-align: center;
             color: white;
-        }
-        .modal-header.success {
             background-color: #4CAF50;
-        }
-        .modal-header.error {
-            background-color: #f44336;
         }
         .modal-body {
             padding: 20px;
@@ -60,10 +56,6 @@
             background-color: #4CAF50;
             color: white;
         }
-        .btn-error {
-            background-color: #f44336;
-            color: white;
-        }
         .btn-secondary {
             background-color: white;
             color: #333;
@@ -72,80 +64,29 @@
     </style>
 </head>
 <body>
-<button onclick="showSuccessModal()">성공 모달 테스트</button>
-<button onclick="showErrorModal()">실패 모달 테스트</button>
-
-<!-- 성공 모달 -->
-<div id="successModal" class="modal-overlay">
+<div class="modal-overlay">
     <div class="modal">
-        <div class="modal-header success">
-            주문 완료
+        <div class="modal-header">
+            결제 완료
         </div>
         <div class="modal-body">
-            <p>주문이 정상적으로 완료되었습니다</p>
-            <button onclick="goToPurchaseHistory()" class="btn btn-primary">구매내역 보기</button>
-            <button onclick="closeModal('successModal')" class="btn btn-secondary">완료</button>
-        </div>
-    </div>
-</div>
-
-<!-- 실패 모달 -->
-<div id="errorModal" class="modal-overlay">
-    <div class="modal">
-        <div class="modal-header error">
-            결제 오류
-        </div>
-        <div class="modal-body">
-            <p>결제 처리 중 오류가 발생했습니다</p>
-            <p style="font-size: 14px; color: #666;">잠시 후 다시 시도해주세요</p>
-            <button onclick="retryPayment()" class="btn btn-error">다시 시도</button>
-            <button onclick="closeModal('errorModal')" class="btn btn-secondary">닫기</button>
+            <p>주문이 정상적으로 처리되었습니다.</p>
+            <p>주문번호: <%= request.getParameter("orderId") %></p>
+            <button class="btn btn-primary" onclick="location.href='/user/mypage/order_list.jsp'">
+                주문내역 확인하기
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal()">
+                확인
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-    function showSuccessModal() {
-        document.getElementById('successModal').style.display = 'flex';
-    }
-
-    function showErrorModal() {
-        document.getElementById('errorModal').style.display = 'flex';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    function goToPurchaseHistory() {
-        // 구매내역 페이지로 이동
-        location.href = '/user/mypage/purchase_history.jsp';
-    }
-
-    function retryPayment() {
-        closeModal('errorModal');
-        // 결제 프로세스 재시작
-        processPayment();
-    }
-
-    function processPayment() {
-        // 결제 처리 로직
-        try {
-            // 결제 처리 코드...
-
-            // 성공 시
-            showSuccessModal();
-        } catch (error) {
-            // 실패 시
-            showErrorModal();
-        }
-    }
-
-    // 모달 외부 클릭 시 닫기
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal-overlay')) {
-            event.target.style.display = 'none';
-        }
+    function closeModal() {
+        const modalOverlay = document.querySelector('.modal-overlay');
+        modalOverlay.style.display = 'none';
+        location.href = "/index.jsp";
     }
 </script>
 </body>

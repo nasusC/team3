@@ -28,35 +28,32 @@ public class ShippingDAO {
 
             StringBuilder selectQuery = new StringBuilder();
             selectQuery
-                    .append(" SELECT d.SHIPPING_ID, d.ORDER_ID, d.RECIPIENT, ")
-                    .append(" d.PHONE, d.ADDRESS, d.ADDRESS2, d.MEMO, d.STATUS, d.INPUT_DATE ")  // INPUT_DATE 추가
-                    .append(" FROM DELIVERY d ")
-                    .append(" JOIN ORDERS o ON d.ORDER_ID = o.ORDER_ID ")
-                    .append(" WHERE o.USER_ID = ? ")
-                    .append(" ORDER BY d.INPUT_DATE DESC ");  // DISTINCT 제거
+                    .append(" SELECT SHIPPING_ID, RECIPIENT, ")
+                    .append(" PHONE, ADDRESS, ADDRESS2, MEMO, STATUS ")
+                    .append(" FROM DELIVERY ")
+                    .append(" WHERE USER_ID = ? ")  // 사용자의 배송지 조회
+                    .append(" AND ORDER_ID IS NULL ")  // 주문에 사용되지 않은 배송지만
+                    .append(" ORDER BY INPUT_DATE DESC ");
 
             pstmt = con.prepareStatement(selectQuery.toString());
             pstmt.setString(1, userId);
 
             rs = pstmt.executeQuery();
-
+            ShippingVO sVO = null;
             while(rs.next()) {
-                ShippingVO sVO = new ShippingVO();
+                sVO = new ShippingVO();
                 sVO.setShippingId(rs.getInt("SHIPPING_ID"));
-                sVO.setOrderId(rs.getInt("ORDER_ID"));
                 sVO.setRecipient(rs.getString("RECIPIENT"));
                 sVO.setPhone(rs.getString("PHONE"));
                 sVO.setAddress(rs.getString("ADDRESS"));
                 sVO.setAddress2(rs.getString("ADDRESS2"));
                 sVO.setMemo(rs.getString("MEMO"));
-                sVO.setShippingStatus(rs.getString("STATUS"));
+                sVO.setStatus(rs.getString("STATUS"));
                 list.add(sVO);
             }
-
         } finally {
             dbCon.dbClose(rs, pstmt, con);
         }
-
         return list;
     }
 
@@ -89,7 +86,7 @@ public class ShippingDAO {
                 sVO.setAddress(rs.getString("ADDRESS"));
                 sVO.setAddress2(rs.getString("ADDRESS2"));
                 sVO.setMemo(rs.getString("MEMO"));
-                sVO.setShippingStatus(rs.getString("STATUS"));
+                sVO.setStatus(rs.getString("STATUS"));
             }
         } finally {
             dbCon.dbClose(rs, pstmt, con);
@@ -98,8 +95,7 @@ public class ShippingDAO {
         return sVO;
     }
 
-    // 새 배송지 추가
-    public int insertNewShipping(ShippingVO sVO) throws SQLException {
+    public int insertNewShipping(ShippingVO sVO, String userId) throws SQLException {
         int result = 0;
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -107,27 +103,48 @@ public class ShippingDAO {
 
         try {
             con = dbCon.getConnection();
+            con.setAutoCommit(false);  // 트랜잭션 시작
 
+            // 기본 배송지로 설정하는 경우, 기존 기본 배송지 해제
+            if("Y".equals(sVO.getIsDefault())) {
+                StringBuilder updateQuery = new StringBuilder();
+                updateQuery
+                        .append(" UPDATE DELIVERY ")
+                        .append(" SET IS_DEFAULT = 'N' ")
+                        .append(" WHERE USER_ID = ? ")
+                        .append(" AND IS_DEFAULT = 'Y' ");
+
+                pstmt = con.prepareStatement(updateQuery.toString());
+                pstmt.setString(1, userId);
+                pstmt.executeUpdate();
+            }
+
+            // 새 배송지 등록
             StringBuilder insertQuery = new StringBuilder();
             insertQuery
                     .append(" INSERT INTO DELIVERY ")
-                    .append(" (SHIPPING_ID, ORDER_ID, RECIPIENT, PHONE, ADDRESS, ADDRESS2, MEMO, STATUS) ")
-                    .append(" VALUES (DELIVERY_SEQ.NEXTVAL, ?, ?, ?, ?, ?, ?, ?) ");
+                    .append(" (SHIPPING_ID, USER_ID, RECIPIENT, PHONE, ADDRESS, ADDRESS2, MEMO, STATUS, IS_DEFAULT) ")
+                    .append(" VALUES (DELIVERY_SEQ.NEXTVAL, ?, ?, ?, ?, ?, ?, '배송준비', ?) ");
 
             pstmt = con.prepareStatement(insertQuery.toString());
-            pstmt.setInt(1, sVO.getOrderId());
+            pstmt.setString(1, userId);
             pstmt.setString(2, sVO.getRecipient());
             pstmt.setString(3, sVO.getPhone());
             pstmt.setString(4, sVO.getAddress());
             pstmt.setString(5, sVO.getAddress2());
             pstmt.setString(6, sVO.getMemo());
-            pstmt.setString(7, "PENDING"); // 초기 상태
+            pstmt.setString(7, sVO.getIsDefault());
 
             result = pstmt.executeUpdate();
+
+            con.commit();  // 트랜잭션 커밋
+        } catch(SQLException e) {
+            if(con != null) con.rollback();  // 오류 시 롤백
+            throw e;
         } finally {
+            if(con != null) con.setAutoCommit(true);  // autoCommit 복원
             dbCon.dbClose(null, pstmt, con);
         }
-
         return result;
     }
 
@@ -144,10 +161,8 @@ public class ShippingDAO {
             StringBuilder updateQuery = new StringBuilder();
             updateQuery
                     .append(" UPDATE DELIVERY ")
-                    .append(" SET RECIPIENT = ?, ")
-                    .append(" PHONE = ?, ")
-                    .append(" ADDRESS = ?, ")
-                    .append(" ADDRESS2 = ? ")
+                    .append(" SET RECIPIENT = ?, PHONE = ?, ")
+                    .append(" ADDRESS = ?, ADDRESS2 = ?, MEMO = ? ")
                     .append(" WHERE SHIPPING_ID = ? ");
 
             pstmt = con.prepareStatement(updateQuery.toString());
@@ -155,14 +170,13 @@ public class ShippingDAO {
             pstmt.setString(2, sVO.getPhone());
             pstmt.setString(3, sVO.getAddress());
             pstmt.setString(4, sVO.getAddress2());
-            pstmt.setInt(5, sVO.getShippingId());
+            pstmt.setString(5, sVO.getMemo());
+            pstmt.setInt(6, sVO.getShippingId());
 
             result = pstmt.executeUpdate();
-
         } finally {
             dbCon.dbClose(null, pstmt, con);
         }
-
         return result;
     }
 
@@ -202,13 +216,11 @@ public class ShippingDAO {
 
             StringBuilder selectQuery = new StringBuilder();
             selectQuery
-                    .append(" SELECT d.SHIPPING_ID, d.ORDER_ID, d.RECIPIENT, ")
-                    .append(" d.PHONE, d.ADDRESS, d.ADDRESS2, d.MEMO, d.STATUS ")
-                    .append(" FROM DELIVERY d ")
-                    .append(" JOIN ORDERS o ON d.ORDER_ID = o.ORDER_ID ")
-                    .append(" WHERE o.USER_ID = ? ")
-                    .append(" AND ROWNUM = 1 ")
-                    .append(" ORDER BY d.INPUT_DATE DESC ");
+                    .append(" SELECT SHIPPING_ID, RECIPIENT, ")
+                    .append(" PHONE, ADDRESS, ADDRESS2, MEMO, STATUS ")
+                    .append(" FROM DELIVERY ")
+                    .append(" WHERE USER_ID = ? ")
+                    .append(" AND IS_DEFAULT = 'Y' "); // 기본 배송지만 조회
 
             pstmt = con.prepareStatement(selectQuery.toString());
             pstmt.setString(1, userId);
@@ -218,21 +230,19 @@ public class ShippingDAO {
             if(rs.next()) {
                 sVO = new ShippingVO();
                 sVO.setShippingId(rs.getInt("SHIPPING_ID"));
-                sVO.setOrderId(rs.getInt("ORDER_ID"));
                 sVO.setRecipient(rs.getString("RECIPIENT"));
                 sVO.setPhone(rs.getString("PHONE"));
                 sVO.setAddress(rs.getString("ADDRESS"));
                 sVO.setAddress2(rs.getString("ADDRESS2"));
                 sVO.setMemo(rs.getString("MEMO"));
-                sVO.setShippingStatus(rs.getString("STATUS"));
+                sVO.setStatus(rs.getString("STATUS"));
             }
-
         } finally {
             dbCon.dbClose(rs, pstmt, con);
         }
-
         return sVO;
     }
+
 }
 
 

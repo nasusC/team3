@@ -5,7 +5,7 @@
 <%@ page import="java.util.List" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%--로그인세션 필요--%>
+<%@ include file="/common/session_chk.jsp" %>
 <%
   // URL 파라미터 받기
   String productId = request.getParameter("productId");
@@ -16,8 +16,7 @@
   UserProductDAO productDAO = new UserProductDAO();
   ProductVO product = productDAO.selectByProductId(Integer.parseInt(productId));
 
-  // 임시 userId 설정 (실제로는 로그인 세션에서 가져와야 함)
-  String userId = "user1"; // 테스트용 임시 userId
+  String userId = sessionId;
 
   // 배송 정보 조회 (에러 처리 추가)
   ShippingVO defaultShipping = null;
@@ -137,38 +136,57 @@
     <!-- 주문 상품 정보 -->
     <section class="order-summary">
       <h2>주문상품</h2>
+      <input type="hidden" id="selectedShippingId" name="shippingId" value="${shipping.shippingId}">
       <div class="product">
         <img src="${product.mainImg}" alt="${product.name}">
         <div class="product-info">
           <h3>${product.name}</h3>
           <div class="price">
+            <c:choose>
+              <c:when test="${product.discountFlag eq 'Y'}">
+                        <span class="original-price">
+                            정가: <fmt:formatNumber value="${product.price}" type="number"/>원
+                        </span><br>
+                <span class="current-price">
+                            할인가: <fmt:formatNumber value="${product.discountPrice}" type="number"/>원
+                        </span>
+              </c:when>
+              <c:otherwise>
                         <span class="current-price">
                             <fmt:formatNumber value="${product.price}" type="number"/>원
                         </span>
+              </c:otherwise>
+            </c:choose>
           </div>
           <span class="discount-label">옵션: ${param.color} / ${param.size}</span>
         </div>
       </div>
       <div class="order-total">
         <span>총 상품금액</span>
-        <span><fmt:formatNumber value="${product.price}" type="number"/>원</span>
+        <span>
+            <c:choose>
+              <c:when test="${product.discountFlag eq 'Y'}">
+                <fmt:formatNumber value="${product.discountPrice}" type="number"/>원
+              </c:when>
+              <c:otherwise>
+                <fmt:formatNumber value="${product.price}" type="number"/>원
+              </c:otherwise>
+            </c:choose>
+        </span>
       </div>
     </section>
 
-    <!-- 결제 수단 섹션 수정 -->
+    <!-- 결제 수단 섹션 -->
     <section class="payment-method">
       <h2>결제수단</h2>
       <div class="user-cash">
         <span>보유 네이버페이 포인트</span>
         <span class="user-cash-amount"><fmt:formatNumber value="${userCash}" type="number"/>원</span>
-        <button
-            onclick="location.href='charge_cash.jsp?productId=${product.productId}&color=${param.color}&size=${param.size}'"
-            class="charge-button">충전하기
-        </button>
+        <button onclick="location.href='charge_cash.jsp?productId=${product.productId}&color=${param.color}&size=${param.size}'" class="charge-button">충전하기</button>
       </div>
       <div class="payment-option">
         <label class="use-cash-label">
-          <input type="checkbox" id="use-cash" onchange="toggleCashUse(${userCash}, ${product.price})">
+          <input type="checkbox" id="use-cash" onchange="toggleCashUse()">
           네이버페이 사용
         </label>
         <div class="cash-use-amount" style="display: none;">
@@ -178,7 +196,7 @@
       </div>
       <div class="payment-amount">
         <span>결제금액</span>
-        <span class="total-amount"><fmt:formatNumber value="${product.price}" type="number"/>원</span>
+        <span class="total-amount"><fmt:formatNumber value="${product.discountFlag eq 'Y' ? product.discountPrice : product.price}" type="number"/>원</span>
       </div>
     </section>
 
@@ -194,7 +212,16 @@
     <h2>결제상세</h2>
     <div class="payment-row">
       <span>총 상품금액</span>
-      <span><fmt:formatNumber value="${product.price}" type="number"/>원</span>
+      <span>
+            <c:choose>
+              <c:when test="${product.discountFlag eq 'Y'}">
+                <fmt:formatNumber value="${product.discountPrice}" type="number"/>원
+              </c:when>
+              <c:otherwise>
+                <fmt:formatNumber value="${product.price}" type="number"/>원
+              </c:otherwise>
+            </c:choose>
+        </span>
     </div>
     <div class="payment-row">
       <span>배송비</span>
@@ -202,13 +229,28 @@
     </div>
     <div class="payment-total">
       <span>총 결제금액</span>
-      <span><fmt:formatNumber value="${product.price}" type="number"/>원</span>
+      <span>
+            <c:choose>
+              <c:when test="${product.discountFlag eq 'Y'}">
+                <fmt:formatNumber value="${product.discountPrice}" type="number"/>원
+              </c:when>
+              <c:otherwise>
+                <fmt:formatNumber value="${product.price}" type="number"/>원
+              </c:otherwise>
+            </c:choose>
+        </span>
     </div>
     <button class="pay-button" onclick="processPayment()">
-      <fmt:formatNumber value="${product.price}" type="number"/>원 결제하기
+      <c:choose>
+        <c:when test="${product.discountFlag eq 'Y'}">
+          <fmt:formatNumber value="${product.discountPrice}" type="number"/>원 결제하기
+        </c:when>
+        <c:otherwise>
+          <fmt:formatNumber value="${product.price}" type="number"/>원 결제하기
+        </c:otherwise>
+      </c:choose>
     </button>
   </div>
-</div>
 
 <!-- 배송지 모달 부분 -->
 <div id="address-modal" class="modal">
@@ -269,7 +311,7 @@
       <div class="input-group">
         <label class="checkbox-label">
           <input type="checkbox" name="isDefault" id="isDefault">
-          기본 배송지로 설정
+          <span>기본 배송지로 설정</span>
         </label>
       </div>
       <div class="button-group">
@@ -293,17 +335,21 @@
 </div>
 <script>
     // 캐시 사용 토글 함수
-    function toggleCashUse(userCash, totalPrice) {
+    function toggleCashUse() {
         const useCash = $('#use-cash').is(':checked');
         const cashUseAmount = $('.cash-use-amount');
         const totalAmountElement = $('.total-amount');
         const cashAmountElement = $('.cash-amount');
 
-        if (useCash) {
+        const userCash = ${userCash};
+        const originalPrice = ${product.price};
+        const discountPrice = ${product.discountFlag eq 'Y' ? product.discountPrice : product.price};
+
+        if(useCash) {
             // 사용 가능한 캐시 계산
-            const availableCash = Math.min(userCash, totalPrice);
+            const availableCash = Math.min(userCash, discountPrice);
             // 남은 결제 금액 계산
-            const remainingPrice = totalPrice - availableCash;
+            const remainingPrice = discountPrice - availableCash;
 
             // 금액 표시 업데이트
             cashAmountElement.text(new Intl.NumberFormat('ko-KR').format(availableCash) + '원');
@@ -312,8 +358,8 @@
             // 사용 금액 표시 영역 보이기
             cashUseAmount.show();
         } else {
-            // 원래 가격으로 복원
-            totalAmountElement.text(new Intl.NumberFormat('ko-KR').format(totalPrice) + '원');
+            // 원래 가격으로 복원 (할인가 적용)
+            totalAmountElement.text(new Intl.NumberFormat('ko-KR').format(discountPrice) + '원');
             cashAmountElement.text('0원');
 
             // 사용 금액 표시 영역 숨기기
@@ -321,6 +367,7 @@
         }
     }
 
+    // 배송지 선택
     // 배송지 선택
     function selectAddress(shippingId) {
         $.ajax({
@@ -330,11 +377,24 @@
             dataType: 'json',
             success: function (data) {
                 if (data.success) {
-                    // 메인 화면의 배송지 정보 업데이트
-                    $('.delivery-info .info-row .name').text(data.recipient);
-                    $('.delivery-info .info-row .phone').text(data.phone);
-                    $('.delivery-info .info-row .address').text(data.address);
-                    $('.delivery-info .info-row .address2').text(data.address2);
+                    // 배송지 정보 컨테이너 내용 교체
+                    var deliveryInfoHtml =
+                        '<div class="info-row">' +
+                        '<h2 class="section-title">배송지</h2>' +
+                        '<button class="change-btn hover-effect" onclick="toggleModal(\'address-modal\')">변경</button>' +
+                        '</div>' +
+                        '<div class="info-row">' +
+                        '<span class="name">수령인 : ' + data.recipient + '</span>' +
+                        '</div>' +
+                        '<div class="info-row">' +
+                        '<span class="phone">전화번호 : ' + data.phone + '</span>' +
+                        '</div>' +
+                        '<div class="info-row">' +
+                        '<span class="address">배송 주소 : ' + data.address + '</span>&nbsp;' +
+                        '<span class="address2">' + data.address2 + '</span>' +
+                        '</div>';
+
+                    $('.delivery-info').html(deliveryInfoHtml);
 
                     // 모달 닫기
                     toggleModal('address-modal');
@@ -409,7 +469,6 @@
         });
     });
 
-    // jQuery를 사용하는 부분은 $(document).ready() 내부로 이동
     $(document).ready(function () {
         // 새 배송지 폼 제출 처리
         $('#new-address-form').on('submit', function (e) {
@@ -417,14 +476,15 @@
 
             // 수정 모드인지 확인
             const shippingId = $(this).data('shippingId');
-            const isEdit = !!shippingId;
+            const isEdit = !!shippingId;  // shippingId가 있으면 수정 모드
 
             // 폼 데이터 수집
             const formData = {
                 recipient: $('#recipient').val(),
                 phone: $('#phone').val(),
                 address: $('#address').val(),
-                address2: $('#address2').val()
+                address2: $('#address2').val(),
+                isDefault: $('#isDefault').is(':checked') ? 'Y' : 'N'  // 기본 배송지 설정 여부
             };
 
             // 수정 모드일 경우 shippingId 추가
@@ -460,8 +520,35 @@
                 data: formData,
                 success: function (response) {
                     if (response.success) {
-                        alert(isEdit ? '배송지가 수정되었습니다.' : '배송지가 추가되었습니다.');
-                        location.reload();
+                        alert(response.message);
+
+                        // 기본 배송지로 설정된 경우 바로 배송지 정보 업데이트
+                        if(response.isDefault === 'Y') {
+                            var deliveryInfoHtml =
+                                '<div class="info-row">' +
+                                '<h2 class="section-title">배송지</h2>' +
+                                '<button class="change-btn hover-effect" onclick="toggleModal(\'address-modal\')">변경</button>' +
+                                '</div>' +
+                                '<div class="info-row">' +
+                                '<span class="name">수령인 : ' + response.recipient + '</span>' +
+                                '</div>' +
+                                '<div class="info-row">' +
+                                '<span class="phone">전화번호 : ' + response.phone + '</span>' +
+                                '</div>' +
+                                '<div class="info-row">' +
+                                '<span class="address">배송 주소 : ' + response.address + '</span>&nbsp;' +
+                                '<span class="address2">' + response.address2 + '</span>' +
+                                '</div>';
+
+                            $('.delivery-info').html(deliveryInfoHtml);
+                        }
+
+                        // 모달 닫기
+                        toggleModal('new-address-modal');
+
+                        if(response.refreshPage) {
+                            location.reload();
+                        }
                     } else {
                         alert(response.message || '처리 중 오류가 발생했습니다.');
                     }
@@ -527,7 +614,7 @@
     // 결제 처리 함수 수정
     function processPayment() {
         // 배송지 체크
-        if (!${not empty shipping.address}) {
+        if(!${not empty shipping.address}) {
             alert('배송지를 선택해주세요.');
             return;
         }
@@ -538,19 +625,19 @@
             : $('#delivery-request').val();
 
         const useCash = $('#use-cash').is(':checked');
-        const totalPrice = ${product.price};
+        const productPrice = ${product.discountFlag eq 'Y' ? product.discountPrice : product.price};
         const userCash = ${userCash};
         let cashAmount = 0;
 
-        if (useCash) {
-            cashAmount = Math.min(userCash, totalPrice);
+        if(useCash) {
+            cashAmount = Math.min(userCash, productPrice);
         }
 
         const paymentData = {
             productId: '${product.productId}',
             color: '${param.color}',
             size: '${param.size}',
-            amount: totalPrice,
+            amount: productPrice,
             useCash: cashAmount,
             paymentMethod: 'naverpay',
             deliveryMemo: deliveryMemo,
@@ -561,19 +648,20 @@
             url: 'payment_process.jsp',
             type: 'POST',
             data: paymentData,
-            success: function (response) {
-                if (response.success) {
+            success: function(response) {
+                if(response.success) {
                     alert('결제가 완료되었습니다.');
                     location.href = 'payment_complete_modal.jsp?orderId=' + response.orderId;
                 } else {
                     alert(response.message || '결제 처리 중 오류가 발생했습니다.');
                 }
             },
-            error: function () {
+            error: function() {
                 alert('결제 처리 중 오류가 발생했습니다.');
             }
         });
     }
 </script>
+</div>
 </body>
 </html>

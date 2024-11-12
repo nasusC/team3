@@ -1,4 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" info="" %>
+<%@ page import="kr.co.sist.user.temp.UserVO" %>
+<%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -13,12 +15,50 @@
           crossorigin="anonymous"></script>
   <!--    JQuery CDN start-->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-
   <style>
+      .dropdown {
+          position: relative;
+          display: inline-block;
+      }
 
+      .dropdown-menu {
+          display: none;
+          position: absolute;
+          background-color: #fff;
+          min-width: 160px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+          z-index: 1000;
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          border: 1px solid #ddd;
+      }
 
+      .dropdown:hover .dropdown-menu {
+          display: block;
+      }
+
+      .dropdown-menu li a {
+          padding: 12px 16px;
+          text-decoration: none;
+          display: block;
+          color: #333;
+      }
+
+      .dropdown-menu li a:hover {
+          background-color: #f5f5f5;
+      }
+
+      /* 기존 auth-button 스타일이 있다면 유지하고, 없다면 추가해주세요 */
+      .auth-button {
+          text-decoration: none;
+          padding: 8px 15px;
+          color: #333;
+          cursor: pointer;
+      }
   </style>
 </head>
+
 <body>
 <div class="head">
   <div class="header">
@@ -30,17 +70,30 @@
     <div class="search-and-login">
       <div class="search-bar">
         <form action="index.jsp" method="get" id="searchForm">
-          <input type="text" name="name" placeholder="검색..." id="searchInput">
+          <input type="text" name="name" value="${param.name}" placeholder="검색..." id="searchInput">
+          <input type="hidden" name="sort" value="${param.sort}">
           <button type="submit" aria-label="검색">🔍</button>
         </form>
       </div>
       <div class="auth-buttons">
-        <button class="login-button" onclick="location.href='login.html'">로그인</button>
-        <button class="auth-button" id="logout-button"
-                style="display: none;" onclick="logout()">로그아웃
-        </button>
-        <a href=http://localhost:8080/user/mypage/mypage.jsp" id="mypage-button" style="display: none;"
-           class="auth-button">마이페이지</a>
+        <c:choose>
+          <c:when test="${empty userData}">
+            <!-- 비로그인 상태 -->
+            <button class="login-button" onclick="location.href='/user/login/login_page_o.jsp'">로그인</button>
+          </c:when>
+          <c:otherwise>
+            <!-- 로그인 상태 -->
+            <button class="auth-button" id="logout-button" onclick="logout()">로그아웃</button>
+            <div class="dropdown">
+              <a href="#" class="auth-button dropdown-toggle" id="mypage-button">마이페이지</a>
+              <ul class="dropdown-menu">
+                <li><a href="/user/mypage/order_list.jsp">주문확인/배송조회</a></li>
+                <li><a href="/user/mypage/user_edit.html">보안 설정</a></li>
+                <li><a href="/user/mypage/qa_list.jsp">나의 Q&A조회</a></li>
+              </ul>
+            </div>
+          </c:otherwise>
+        </c:choose>
       </div>
     </div>
   </div>
@@ -71,9 +124,13 @@
   </div>
 </div>
 <script>
-    $(function () {
+    $(function() {
 
-    })
+    });
+    function logout() {
+        // 로그아웃 처리 로직
+        location.href = "/user/login/logout.jsp";
+    }
 </script>
 
 </body>

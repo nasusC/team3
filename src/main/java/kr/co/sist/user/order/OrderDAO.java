@@ -14,7 +14,7 @@ public class OrderDAO {
     /**
      * 새로운 주문과 주문 상품을 등록합니다.
      */
-    public int insertOrder(OrderVO oVO, OrderProductVO opVO) throws SQLException {
+    public int insertOrder(OrderVO oVO, OrderProductVO opVO, int shippingId) throws SQLException {
         int orderId = 0;
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -74,11 +74,19 @@ public class OrderDAO {
 
                 result = pstmt.executeUpdate();
 
-                if(result > 0) {
-                    con.commit();
-                    return orderId;  // 성공 시 orderId 반환
-                } else {
-                    con.rollback();
+                // 3. 배송지 정보 업데이트
+                if(result > 0 && shippingId > 0) {
+                    String updateDeliveryQuery = "UPDATE DELIVERY SET ORDER_ID = ? WHERE SHIPPING_ID = ?";
+                    pstmt = con.prepareStatement(updateDeliveryQuery);
+                    pstmt.setInt(1, orderId);
+                    pstmt.setInt(2, shippingId);
+
+                    result = pstmt.executeUpdate();
+
+                    if(result > 0) {
+                        con.commit();
+                        return orderId;
+                    }
                 }
             }
             con.rollback();
@@ -97,7 +105,6 @@ public class OrderDAO {
 
         return 0;  // 실패 시 0 반환
     }
-
     /**
      * 주문 상태를 업데이트합니다.
      */
@@ -212,5 +219,43 @@ public class OrderDAO {
         }
 
         return list;
+    }
+
+    /**
+     * 주문 완료 후 배송지 정보에 ORDER_ID를 업데이트합니다.
+     */
+    public int updateShippingOrderId(int orderId, int shippingId) throws SQLException {
+        int result = 0;
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        DbConnection dbCon = DbConnection.getInstance();
+
+        try {
+            con = dbCon.getConnection();
+            con.setAutoCommit(false);
+
+            String updateQuery = "UPDATE DELIVERY SET ORDER_ID = ? WHERE SHIPPING_ID = ?";
+
+            pstmt = con.prepareStatement(updateQuery);
+            pstmt.setInt(1, orderId);
+            pstmt.setInt(2, shippingId);
+
+            result = pstmt.executeUpdate();
+
+            if(result > 0) {
+                con.commit();
+            } else {
+                con.rollback();
+            }
+
+        } catch(SQLException e) {
+            if(con != null) con.rollback();
+            throw e;
+        } finally {
+            if(con != null) con.setAutoCommit(true);
+            dbCon.dbClose(null, pstmt, con);
+        }
+
+        return result;
     }
 }

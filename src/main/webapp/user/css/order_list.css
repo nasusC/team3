@@ -1,0 +1,218 @@
+/* 기본 레이아웃 */
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding: 30px;
+}
+
+/* 주문 컨테이너 */
+.order-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 20px rgba(175, 125, 231, 0.08);
+    padding: 25px;
+    margin: 20px auto;
+    width: calc(100% - 40px);
+    max-width: 500px;
+    border: 1px solid rgba(175, 125, 231, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.order-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 25px rgba(175, 125, 231, 0.12);
+}
+
+/* 상품 정보 */
+.order-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    background: rgba(175, 125, 231, 0.03);
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.order-info img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.product-name h2 {
+    font-size: 1.1rem;
+    color: #333;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+}
+
+/* 진행 상태 표시 */
+.progress-container {
+    margin: 35px 0;
+    position: relative;
+    padding: 0 15px;
+}
+
+.progress-bar {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+/* 진행 단계 */
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 33.33%;
+    position: relative;
+}
+
+.circle {
+    width: 22px;
+    height: 22px;
+    background-color: #E6E6FA;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 2;
+}
+
+.step.active .circle {
+    background-color: #AF7DE7;
+}
+
+.step span {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.step.active span {
+    color: #AF7DE7;
+    font-weight: 600;
+}
+
+/* 진행 라인 */
+.progress-line {
+    position: absolute;
+    top: 11px;
+    left: calc(11px + 3%);
+    right: calc(11px + 3%);
+    height: 2px;
+    background-color: #E6E6FA;
+    z-index: 1;
+}
+
+.progress-line[data-status="배송준비"] {
+    background: linear-gradient(to right,
+    #AF7DE7 0%,
+    #AF7DE7 50%,
+    #E6E6FA 50%,
+    #E6E6FA 100%
+    );
+}
+
+.progress-line[data-status="배송중"] {
+    background: linear-gradient(to right,
+    #AF7DE7 0%,
+    #AF7DE7 75%,
+    #E6E6FA 75%,
+    #E6E6FA 100%
+    );
+}
+
+.progress-line[data-status="배송완료"] {
+    background: #AF7DE7;
+}
+
+/* 버튼 */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(175, 125, 231, 0.1);
+}
+
+.confirm-btn, .cancel {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.confirm-btn {
+    background-color: #AF7DE7;
+    color: white;
+    border: none;
+}
+
+.confirm-btn:hover {
+    background-color: #9f6dd7;
+    transform: translateY(-1px);
+}
+
+.cancel {
+    background-color: white;
+    color: #666;
+    border: 1px solid #e0e0e0;
+}
+
+.cancel:hover {
+    border-color: #AF7DE7;
+    color: #AF7DE7;
+    transform: translateY(-1px);
+}
+
+/* 주문 없음 메시지 */
+.no-orders {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 20px rgba(175, 125, 231, 0.08);
+    margin: 20px auto;
+    max-width: 500px;
+    color: #666;
+    font-size: 15px;
+    border: 1px solid rgba(175, 125, 231, 0.1);
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+    body { padding: 15px; }
+    .order-container {
+        padding: 20px;
+        margin: 15px auto;
+    }
+    .order-info { padding: 12px; }
+    .order-info img {
+        width: 80px;
+        height: 80px;
+    }
+    .product-name h2 { font-size: 1rem; }
+    .circle {
+        width: 20px;
+        height: 20px;
+    }
+    .step span { font-size: 12px; }
+    .confirm-btn, .cancel {
+        padding: 8px 15px;
+        font-size: 13px;
+    }
+}

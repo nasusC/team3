@@ -461,13 +461,8 @@ h1 {
 }
 
 .checkbox-label input[type="checkbox"] {
-    margin-right: 8px;
+    margin-right: 1px;
     accent-color: #03c75a;
-}
-
-/* 안심번호 체크박스 */
-#safe-number {
-    margin-right: 6px;
 }
 
 /* 무료배송 표시 */
