@@ -234,7 +234,6 @@ public class UserProductDAO {
 //        return list;
 //    }
 
-    // 상품 ID로 상세 정보 조회
     public ProductVO selectByProductId(int productId) throws SQLException {
         ProductVO pVO = null;
         Connection con = null;
@@ -247,29 +246,46 @@ public class UserProductDAO {
 
             StringBuilder selectQuery = new StringBuilder();
             selectQuery
-                    .append(" SELECT PRODUCT_ID, NAME, PRICE, BRAND, ")
-                    .append(" DESCRIPTION, STOCK_QUANTITY, MAIN_IMG, ")
-                    .append(" CREATED_AT, MODEL_NAME, DISCOUNT_PRICE, DISCOUNT_FLAG")
-                    .append(" FROM PRODUCTS ")
-                    .append(" WHERE PRODUCT_ID = ? ");
+                    .append(" SELECT p.PRODUCT_ID, p.NAME, p.PRICE, p.BRAND, ")
+                    .append(" p.DESCRIPTION, p.STOCK_QUANTITY, p.MAIN_IMG, ")
+                    .append(" p.CREATED_AT, p.MODEL_NAME, p.DISCOUNT_PRICE, p.DISCOUNT_FLAG, ")
+                    .append(" s.SUB_IMG_ID, s.SUB_IMG_NAME ")  // 서브 이미지 컬럼 추가
+                    .append(" FROM PRODUCTS p ")
+                    .append(" LEFT JOIN SUB_IMG s ON p.PRODUCT_ID = s.PRODUCT_ID ")  // LEFT JOIN으로 서브 이미지 테이블 조인
+                    .append(" WHERE p.PRODUCT_ID = ? ");
 
             pstmt = con.prepareStatement(selectQuery.toString());
             pstmt.setInt(1, productId);
 
             rs = pstmt.executeQuery();
 
-            if(rs.next()) {
-                pVO = new ProductVO();
-                pVO.setProductId(rs.getInt("PRODUCT_ID"));
-                pVO.setName(rs.getString("NAME"));
-                pVO.setPrice(rs.getInt("PRICE"));
-                pVO.setBrand(rs.getString("BRAND"));
-                pVO.setDescription(rs.getString("DESCRIPTION"));
-                pVO.setStockQuantity(rs.getInt("STOCK_QUANTITY"));
-                pVO.setCreatedAt(rs.getDate("CREATED_AT"));
-                pVO.setModelName(rs.getString("MODEL_NAME"));
-                pVO.setDiscountPrice(rs.getInt("DISCOUNT_PRICE"));
-                pVO.setDiscountFlag(rs.getString("DISCOUNT_FLAG"));
+            List<String> subImgList = new ArrayList<>();  // 서브 이미지들을 저장할 리스트
+
+            while(rs.next()) {
+                if(pVO == null) {  // 첫 번째 행에서만 상품 정보 설정
+                    pVO = new ProductVO();
+                    pVO.setProductId(rs.getInt("PRODUCT_ID"));
+                    pVO.setName(rs.getString("NAME"));
+                    pVO.setPrice(rs.getInt("PRICE"));
+                    pVO.setBrand(rs.getString("BRAND"));
+                    pVO.setDescription(rs.getString("DESCRIPTION"));
+                    pVO.setStockQuantity(rs.getInt("STOCK_QUANTITY"));
+                    pVO.setMainImg(rs.getString("MAIN_IMG"));
+                    pVO.setCreatedAt(rs.getDate("CREATED_AT"));
+                    pVO.setModelName(rs.getString("MODEL_NAME"));
+                    pVO.setDiscountPrice(rs.getInt("DISCOUNT_PRICE"));
+                    pVO.setDiscountFlag(rs.getString("DISCOUNT_FLAG"));
+                }
+
+                // 서브 이미지가 있으면 리스트에 추가
+                String subImgName = rs.getString("SUB_IMG_NAME");
+                if(subImgName != null) {
+                    subImgList.add(subImgName);
+                }
+            }
+
+            if(pVO != null) {
+                pVO.setSubImgList(subImgList);  // ProductVO에 서브 이미지 리스트 설정
             }
 
         } finally {

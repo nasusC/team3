@@ -1,6 +1,7 @@
 package kr.co.sist.user.product;
 
 import java.sql.Date;
+import java.util.List;
 
 /**
  * @author : S.H.CHA
@@ -14,12 +15,22 @@ public class ProductVO {
     private int stockQuantity;
 
     private String mainImg;
+    private List<String> subImgList;
+
     private Date createdAt;
     private String modelName;
     private String salesStatus;
 
     private int discountPrice;
     private String discountFlag;
+
+    public List<String> getSubImgList() {
+        return subImgList;
+    }
+
+    public void setSubImgList(List<String> subImgList) {
+        this.subImgList = subImgList;
+    }
 
     public int getDiscountPrice() {
         return discountPrice;

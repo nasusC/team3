@@ -19,6 +19,7 @@
 
   // 리뷰 목록 조회 - 수정된 부분
   List<ReviewVO> reviewList = dao.selectAllProductReview(Integer.parseInt(productId));
+
   // 상품 사이즈 목록 조회 추가
   List<SizeVO> sizeList = dao.selectProductSizes(Integer.parseInt(productId));
 
@@ -36,9 +37,10 @@
   <title>${product.name} - 에고엠포리움</title>
 
   <!-- CSS 파일 -->
-  <link rel="stylesheet" href="../../user/css/main.css">
-  <link rel="stylesheet" href="../../user/css/product_details.css">
-  <link rel="stylesheet" href="../../user/css/review.css">
+  <!-- 이렇게 수정 -->
+  <link rel="stylesheet" href="/user/css/main.css">
+  <link rel="stylesheet" href="/user/css/product_details.css">
+  <link rel="stylesheet" href="/user/css/review.css">
 
 
   <!-- jQuery -->
@@ -72,6 +74,86 @@
       .highlight {
           background-color: #f5f5f5;
       }
+
+      /* 상품 이미지 컨테이너 스타일 */
+      .product-container {
+          display: flex;
+          gap: 40px;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+      }
+
+      .product-image {
+          flex: 1;
+          max-width: 600px;
+      }
+
+      /* 메인 이미지 스타일 */
+      .main-image {
+          position: relative;
+          width: 100%;
+          margin-bottom: 20px;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+
+      .main-image img {
+          width: 100%;
+          height: auto;
+          display: block;
+          transition: transform 0.3s ease;
+      }
+
+      .main-image:hover img {
+          transform: scale(1.05);
+      }
+
+      /* 서브 이미지 컨테이너 스타일 */
+      .sub-images {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+          margin-top: 20px;
+      }
+
+      /* 서브 이미지 개별 스타일 */
+      .sub-image {
+          position: relative;
+          aspect-ratio: 1;
+          border-radius: 6px;
+          overflow: hidden;
+          cursor: pointer;
+          border: 2px solid transparent;
+          transition: all 0.2s ease;
+      }
+
+      .sub-image.active {
+          border-color: #2563eb;
+      }
+
+      .sub-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.2s ease;
+      }
+
+      .sub-image:hover img {
+          transform: scale(1.1);
+      }
+
+      /* 반응형 디자인 */
+      @media (max-width: 768px) {
+          .product-container {
+              flex-direction: column;
+          }
+
+          .sub-images {
+              grid-template-columns: repeat(3, 1fr);
+          }
+      }
   </style>
   <style>
 
@@ -79,12 +161,32 @@
 </head>
 <body>
 <!-- 헤더 include -->
-<jsp:include page="../../common/header.jsp"/>
+<jsp:include page="/common/header.jsp"/>
 
 <div class="product-container">
   <!-- 상품 이미지 -->
   <div class="product-image">
-    <img src="${product.mainImg}" alt="${product.name}">
+    <!-- 메인 이미지 -->
+    <div class="main-image">
+      <img src="/common/images/${product.mainImg}" alt="${product.name}" id="mainImage">
+    </div>
+
+    <!-- 서브 이미지들 -->
+    <div class="sub-images">
+      <!-- 메인 이미지도 서브 이미지 목록에 포함 -->
+      <div class="sub-image active" onclick="changeImage(this, '${product.mainImg}')">
+        <img src="/common/images/${product.mainImg}" alt="${product.name}">
+      </div>
+
+      <!-- 서브 이미지들 -->
+      <c:if test="${not empty product.subImgList}">
+        <c:forEach var="subImg" items="${product.subImgList}">
+          <div class="sub-image" onclick="changeImage(this, '${subImg}')">
+            <img src="/common/images/${subImg}" alt="${product.name}">
+          </div>
+        </c:forEach>
+      </c:if>
+    </div>
   </div>
 
   <!-- 상품 상세 정보 -->
@@ -308,6 +410,41 @@
             ? expandButton
             : expandedContent;
         scrollTarget.scrollIntoView({behavior: 'smooth'});
+    });
+
+    function changeImage(element, imgSrc) {
+        // 메인 이미지 변경
+        document.getElementById('mainImage').src = '/common/images/' + imgSrc;
+
+        // active 클래스 관리
+        document.querySelectorAll('.sub-image').forEach(el => {
+            el.classList.remove('active');
+        });
+        element.classList.add('active');
+    }
+
+    // 이미지 줌 기능 (선택적)
+    const mainImage = document.getElementById('mainImage');
+    const mainImageContainer = document.querySelector('.main-image');
+
+    mainImageContainer.addEventListener('mousemove', function(e) {
+        const bounds = this.getBoundingClientRect();
+        const x = e.clientX - bounds.left;
+        const y = e.clientY - bounds.top;
+
+        const xPercent = x / bounds.width * 100;
+        const yPercent = y / bounds.height * 100;
+
+        mainImage.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+    });
+
+    mainImageContainer.addEventListener('mouseenter', function() {
+        mainImage.style.transform = 'scale(1.5)';
+    });
+
+    mainImageContainer.addEventListener('mouseleave', function() {
+        mainImage.style.transform = 'scale(1)';
+        mainImage.style.transformOrigin = 'center center';
     });
 </script>
 

@@ -42,21 +42,20 @@
   </script>
 </head>
 <body>
-<header>
   <jsp:include page="/common/header.jsp"/>
-</header>
-<c:choose>
-  <c:when test="${empty orderList}">
-    <div class="no-orders">
-      주문정보가 없습니다.
-    </div>
-  </c:when>
-  <c:otherwise>
-    <c:forEach var="order" items="${orderList}">
-      <c:forEach var="shipping" items="${shippingList}">
+
+  <!-- JSP 부분 수정 -->
+  <c:choose>
+    <c:when test="${empty orderList}">
+      <div class="no-orders">
+        주문정보가 없습니다.
+      </div>
+    </c:when>
+    <c:otherwise>
+      <c:forEach var="order" items="${orderList}">
         <div class="order-container">
           <div class="order-info">
-            <img src="images/${order.imgName}" alt="${order.productName}"/>
+            <img src="/common/images/${order.imgName}" alt="${order.productName}"/>
             <div class="product-name">
               <h2>${order.productName}</h2>
             </div>
@@ -66,24 +65,22 @@
           <div class="progress-container">
             <div class="progress-bar">
               <div class="progress-steps">
-                <!-- 진행 단계들 -->
-                <div class="step ${shipping.status eq '배송준비' || shipping.status eq '배송중' || shipping.status eq '배송완료' ? 'active' : ''}">
+                <div class="step ${order.shippingStatus eq '배송준비' || order.shippingStatus eq '배송중' || order.shippingStatus eq '배송완료' ? 'active' : ''}">
                   <div class="circle"></div>
                   <span>배송 준비중</span>
                 </div>
 
-                <div class="step ${shipping.status eq '배송중' || shipping.status eq '배송완료' ? 'active' : ''}">
+                <div class="step ${order.shippingStatus eq '배송중' || order.shippingStatus eq '배송완료' ? 'active' : ''}">
                   <div class="circle"></div>
                   <span>배송중</span>
                 </div>
 
-                <div class="step ${shipping.status eq '배송완료' ? 'active' : ''}">
+                <div class="step ${order.shippingStatus eq '배송완료' ? 'active' : ''}">
                   <div class="circle"></div>
                   <span>배송 완료</span>
                 </div>
               </div>
-              <!-- 연결 라인 -->
-              <div class="progress-line" data-status="${shipping.status}"></div>
+              <div class="progress-line" data-status="${order.shippingStatus}"></div>
             </div>
           </div>
 
@@ -94,9 +91,9 @@
         </div>
         <br>
       </c:forEach>
-    </c:forEach>
-  </c:otherwise>
-</c:choose>
+    </c:otherwise>
+  </c:choose>
+
 
 <!-- 리뷰 작성 모달 -->
 <div id="reviewModal" class="modal">

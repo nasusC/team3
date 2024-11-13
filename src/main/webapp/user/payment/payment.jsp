@@ -7,6 +7,10 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ include file="/common/session_chk.jsp" %>
 <%
+  String contextPath = request.getContextPath();
+  request.setAttribute("path", contextPath);
+%>
+<%
   // URL 파라미터 받기
   String productId = request.getParameter("productId");
   String color = request.getParameter("color");
@@ -138,7 +142,7 @@
       <h2>주문상품</h2>
       <input type="hidden" id="selectedShippingId" name="shippingId" value="${shipping.shippingId}">
       <div class="product">
-        <img src="${product.mainImg}" alt="${product.name}">
+        <img src="/common/images/${product.mainImg}" alt="${product.name}">
         <div class="product-info">
           <h3>${product.name}</h3>
           <div class="price">

@@ -110,7 +110,7 @@
       <c:forEach var="product" items="${productList}">
         <div class="product-item">
           <a href="user/main/product_detail.jsp?id=${product.productId}">
-            <img src="${product.mainImg}" alt="${product.name}">
+            <img src="/common/images/${product.mainImg}" alt="${product.name}">
           </a>
           <div class="product-info ">
             <h3>${product.name}</h3>
