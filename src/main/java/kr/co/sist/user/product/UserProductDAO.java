@@ -310,7 +310,7 @@ public class UserProductDAO {
             selectQuery
                     .append(" SELECT r.REVIEW_ID, r.USER_ID, r.PRODUCT_ID, ")
                     .append(" r.CONTENT, r.RATING, r.CREATED_AT, ")
-                    .append(" p.NAME as PRODUCT_NAME, p.MAIN_IMG ")
+                    .append(" p.NAME as PRODUCT_NAME, p.MAIN_IMG, r.review_img ")
                     .append(" FROM REVIEW r ")
                     .append(" JOIN PRODUCTS p ON r.PRODUCT_ID = p.PRODUCT_ID ")
                     .append(" WHERE r.PRODUCT_ID = ? ")
@@ -329,6 +329,7 @@ public class UserProductDAO {
                 reviewVO.setContent(rs.getString("CONTENT"));
                 reviewVO.setRating(rs.getInt("RATING"));
                 reviewVO.setCreatedAt(rs.getDate("CREATED_AT"));
+                reviewVO.setReviewImg(rs.getString("REVIEW_img"));
 
                 list.add(reviewVO);
             }

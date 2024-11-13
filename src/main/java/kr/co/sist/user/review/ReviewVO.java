@@ -13,7 +13,15 @@ public class ReviewVO {
     private Date createdAt;      // CREATED_AT
     private int rating;          // RATING
 
-    // Getter/Setter
+    private String reviewImg;
+
+    public String getReviewImg() {
+        return reviewImg;
+    }
+
+    public void setReviewImg(String reviewImg) {
+        this.reviewImg = reviewImg;
+    }
     public int getReviewId() { return reviewId; }
     public void setReviewId(int reviewId) { this.reviewId = reviewId; }
 

@@ -320,7 +320,7 @@
                 <p>${review.content}</p>
               </div>
               <div class="review-image">
-                <img src="/images/default-review.jpg" alt="리뷰 이미지">
+                <img src="/common/review_images/${review.reviewImg}" alt="리뷰 이미지">
               </div>
             </div>
           </div>
