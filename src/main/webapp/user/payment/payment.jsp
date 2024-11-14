@@ -91,7 +91,27 @@
           }).open();
       }
   </script>
-  <style></style>
+  <style>
+      /* payment.css에 추가 */
+      .point-used {
+          color: #03c75a;
+          font-weight: bold;
+      }
+
+      .payment-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 10px;
+          padding: 5px 0;
+      }
+
+      .payment-total {
+          border-top: 1px solid #ddd;
+          margin-top: 10px;
+          padding-top: 10px;
+          font-weight: bold;
+      }
+  </style>
 
 </head>
 <body>
@@ -344,6 +364,8 @@
         const cashUseAmount = $('.cash-use-amount');
         const totalAmountElement = $('.total-amount');
         const cashAmountElement = $('.cash-amount');
+        const payButton = $('.pay-button');
+        const paymentDetail = $('.payment-summary');
 
         const userCash = ${userCash};
         const originalPrice = ${product.price};
@@ -359,6 +381,30 @@
             cashAmountElement.text(new Intl.NumberFormat('ko-KR').format(availableCash) + '원');
             totalAmountElement.text(new Intl.NumberFormat('ko-KR').format(remainingPrice) + '원');
 
+            // 결제버튼 텍스트 업데이트
+            payButton.text(new Intl.NumberFormat('ko-KR').format(remainingPrice) + '원 결제하기');
+
+            // 결제상세 업데이트
+            var detailHtml = '<h2>결제상세</h2>' +
+                '<div class="payment-row">' +
+                '<span>총 상품금액</span>' +
+                '<span>' + new Intl.NumberFormat('ko-KR').format(discountPrice) + '원</span>' +
+                '</div>' +
+                '<div class="payment-row">' +
+                '<span>배송비</span>' +
+                '<span>무료</span>' +
+                '</div>' +
+                '<div class="payment-row point-used">' +
+                '<span>네이버페이 포인트 사용</span>' +
+                '<span>-' + new Intl.NumberFormat('ko-KR').format(availableCash) + '원</span>' +
+                '</div>' +
+                '<div class="payment-total">' +
+                '<span>총 결제금액</span>' +
+                '<span>' + new Intl.NumberFormat('ko-KR').format(remainingPrice) + '원</span>' +
+                '</div>' +
+                '<button class="pay-button" onclick="processPayment()">' +
+                new Intl.NumberFormat('ko-KR').format(remainingPrice) + '원 결제하기</button>';
+
             // 사용 금액 표시 영역 보이기
             cashUseAmount.show();
         } else {
@@ -366,12 +412,36 @@
             totalAmountElement.text(new Intl.NumberFormat('ko-KR').format(discountPrice) + '원');
             cashAmountElement.text('0원');
 
+            // 결제버튼 텍스트 업데이트
+            payButton.text(new Intl.NumberFormat('ko-KR').format(discountPrice) + '원 결제하기');
+
+            // 결제상세 원래대로 복원
+            var originalDetailHtml = '<h2>결제상세</h2>' +
+                '<div class="payment-row">' +
+                '<span>총 상품금액</span>' +
+                '<span>' + new Intl.NumberFormat('ko-KR').format(discountPrice) + '원</span>' +
+                '</div>' +
+                '<div class="payment-row">' +
+                '<span>배송비</span>' +
+                '<span>무료</span>' +
+                '</div>' +
+                '<div class="payment-total">' +
+                '<span>총 결제금액</span>' +
+                '<span>' + new Intl.NumberFormat('ko-KR').format(discountPrice) + '원</span>' +
+                '</div>' +
+                '<button class="pay-button" onclick="processPayment()">' +
+                new Intl.NumberFormat('ko-KR').format(discountPrice) + '원 결제하기</button>';
+
+            paymentDetail.html(originalDetailHtml);
+
             // 사용 금액 표시 영역 숨기기
             cashUseAmount.hide();
         }
+
+        // 결제상세 HTML 업데이트
+        paymentDetail.html(useCash ? detailHtml : originalDetailHtml);
     }
 
-    // 배송지 선택
     // 배송지 선택
     function selectAddress(shippingId) {
         $.ajax({
@@ -623,18 +693,43 @@
             return;
         }
 
+        // 네이버페이 포인트 사용 체크 여부 확인
+        const useCash = $('#use-cash').is(':checked');
+        if(!useCash) {
+            alert('결제 금액이 부족합니다.\n네이버페이 포인트를 사용해주세요.');
+            return;
+        }
+
         // 배송 메모 가져오기
         const deliveryMemo = $('#custom-memo').is(':visible')
             ? $('#custom-memo').val()
             : $('#delivery-request').val();
 
-        const useCash = $('#use-cash').is(':checked');
+        // 결제 금액 계산
         const productPrice = ${product.discountFlag eq 'Y' ? product.discountPrice : product.price};
-        const userCash = ${userCash};
-        let cashAmount = 0;
+        const cashAmount = parseInt($('.cash-amount').text().replace(/[^0-9]/g, ''));
 
-        if(useCash) {
-            cashAmount = Math.min(userCash, productPrice);
+        // 포인트 사용 유효성 검사
+        if(cashAmount === 0) {
+            alert('사용할 포인트가 0원입니다.');
+            return;
+        }
+
+        if(cashAmount > ${userCash}) {
+            alert('보유한 네이버페이 포인트가 부족합니다.');
+            return;
+        }
+
+        if(cashAmount > productPrice) {
+            alert('네이버페이 포인트 사용 금액이 결제 금액보다 클 수 없습니다.');
+            return;
+        }
+
+        // 최종 결제 금액 계산
+        const finalAmount = productPrice - cashAmount;
+
+        if(!confirm(`해당 상품을 결제하시겠습니까?`)) {
+            return;
         }
 
         const paymentData = {
@@ -643,6 +738,7 @@
             size: '${param.size}',
             amount: productPrice,
             useCash: cashAmount,
+            useCashChecked: useCash,
             paymentMethod: 'naverpay',
             deliveryMemo: deliveryMemo,
             shippingId: '${shipping.shippingId}'
@@ -660,7 +756,8 @@
                     alert(response.message || '결제 처리 중 오류가 발생했습니다.');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('Payment Error:', error);
                 alert('결제 처리 중 오류가 발생했습니다.');
             }
         });

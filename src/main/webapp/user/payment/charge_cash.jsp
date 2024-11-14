@@ -155,14 +155,21 @@
                     url: 'process_charge.jsp',
                     type: 'POST',
                     data: {
-                        userId: '<%=userId%>',  // 작은따옴표로 감싸기
+                        userId: '<%=userId%>',
                         amount: selectedAmount,
                         method: method
                     },
                     success: function(response) {
                         if(response.success) {
                             alert('네이버페이 충전이 완료되었습니다.');
-                            location.href = 'payment.jsp?productId=${param.productId}&color=${param.color}&size=${param.size}';
+                            // opener가 있는 경우 (팝업으로 열린 경우)
+                            if(opener) {
+                                opener.location.reload(); // 부모 창 새로고침
+                                window.close(); // 현재 창 닫기
+                            } else {
+                                // 일반 페이지로 열린 경우
+                                location.href = 'payment.jsp?productId=${param.productId}&color=${param.color}&size=${param.size}';
+                            }
                         } else {
                             alert('충전 중 오류가 발생했습니다: ' + response.message);
                         }

@@ -7,9 +7,26 @@
     JSONObject jsonResponse = new JSONObject();
 
     try {
-//        String userId = request.getParameter("userId");
-        String userId = "user1";
-        int amount = Integer.parseInt(request.getParameter("amount"));
+        // 파라미터 검증
+        String amountStr = request.getParameter("amount");
+
+        if(amountStr == null || amountStr.trim().isEmpty()) {
+            throw new Exception("충전 금액이 누락되었습니다.");
+        }
+
+        // 사용자 ID는 세션에서 가져옴 (session_chk.jsp에서 설정된 값)
+        String userId = sessionId;
+
+        // 금액 변환 및 유효성 검사
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr);
+            if(amount < 1000) {
+                throw new Exception("최소 충전 금액은 1,000원입니다.");
+            }
+        } catch(NumberFormatException e) {
+            throw new Exception("올바른 금액을 입력해주세요.");
+        }
 
         UserCashDAO cashDAO = new UserCashDAO();
 
@@ -39,11 +56,14 @@
         }
 
     } catch(Exception e) {
+        System.out.println("Charge Error: " + e.getMessage());
         e.printStackTrace();
         jsonResponse.put("success", false);
         jsonResponse.put("message", "충전 중 오류가 발생했습니다: " + e.getMessage());
     }
 
     response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
     out.print(jsonResponse.toJSONString());
+    out.flush();
 %>
