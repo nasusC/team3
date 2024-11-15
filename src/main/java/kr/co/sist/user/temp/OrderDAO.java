@@ -34,44 +34,44 @@ public class OrderDAO {
 	public List<OrderListVO> SelectOrderList(String userId) throws SQLException{
 		List<OrderListVO> list=new ArrayList<OrderListVO>();
 		Connection con = null;
-	    PreparedStatement pstmt = null;
-	    ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		DbConnection dbCon = DbConnection.getInstance();
 
-	    DbConnection dbCon = DbConnection.getInstance();
+		try {
+			con = dbCon.getConn("192.168.10.225", "project1", "tiger");
 
-	    try {
-	        con = dbCon.getConn("192.168.10.225", "project1", "tiger");
+			StringBuilder select = new StringBuilder();
+			select
+					.append("  select  o.order_id, d.status as shippingstatus, p.name as productname, ")
+					.append("          p.main_img as imgname, o.order_status  ")  // order_status만 추가
+					.append("  from    orders o  ")
+					.append("  join    delivery d on o.user_id = d.user_id  ")
+					.append("  join    ordered_product op on o.order_id = op.order_id  ")
+					.append("  join    products p on op.product_id = p.product_id  ")
+					.append("  where   o.user_id = ?  ");
 
-	        StringBuilder select = new StringBuilder();
-	        select
-	        .append("	select 	o.order_id, d.status as shippingstatus, p.name as productname, p.main_img as imgname	")
-	        .append("	from 	orders o	")
-	        .append("	join 	delivery d on o.user_id = d.user_id	")
-	        .append("	join 	ordered_product op on o.order_id = op.order_id	")
-	        .append("	join 	products p on op.product_id = p.product_id	")
-	        .append("	where 	o.user_id = ?	");
-	        
-	        pstmt = con.prepareStatement(select.toString());
-	        pstmt.setString(1, userId);
+			pstmt = con.prepareStatement(select.toString());
+			pstmt.setString(1, userId);
 
-	        rs = pstmt.executeQuery();
-	        
-	        OrderListVO olVO=null;
-	        while (rs.next()) {
-	            // 결과가 있을 경우 olVO 객체에 데이터 설정
-	            olVO = new OrderListVO();
-	            olVO.setOrderId(rs.getInt("order_id"));
-	            olVO.setShippingStatus(rs.getString("shippingstatus"));
-	            olVO.setProductName(rs.getString("productname"));
-	            olVO.setImgName(rs.getString("imgname"));
-	            list.add(olVO);
-	        }//while
-	    } finally {
-	        dbCon.dbClose(rs, pstmt, con);
-	    }//end finally
-		
+			rs = pstmt.executeQuery();
+
+			OrderListVO olVO=null;
+			while (rs.next()) {
+				olVO = new OrderListVO();
+				olVO.setOrderId(rs.getInt("order_id"));
+				olVO.setShippingStatus(rs.getString("shippingstatus"));
+				olVO.setProductName(rs.getString("productname"));
+				olVO.setImgName(rs.getString("imgname"));
+				olVO.setOrderStatus(rs.getString("order_status")); // order_status 설정 추가
+				list.add(olVO);
+			}
+		} finally {
+			dbCon.dbClose(rs, pstmt, con);
+		}
+
 		return list;
-	}//SelectShippingByOrderId
+	}
 	
 	public int updateOrderStatus(String orderId, String orderStatus)throws SQLException{
 		int rowCnt=0;
